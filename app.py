@@ -4,9 +4,11 @@ import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import json
-import random
+import requests
 
 # Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
+import random
+
 def analyze_sentiment(text):
     sentiments = ["positive", "negative", "neutral", "mixed"]
     return random.choice(sentiments)
@@ -16,9 +18,12 @@ async def fetch_comments(speech_keywords):
 
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
-    # Load credentials from the JSON file in your GitHub repository
-    with open('google_credentials.json', 'r') as file:
-        credentials_dict = json.load(file)
+    # URL to the raw GitHub JSON file
+    json_url = "https://raw.githubusercontent.com/Muhtasimimam/public_sentiment_analyzer/master/sentimentanalysisapp-457520-74eff8b32d78.json"
+
+    # Fetch the JSON file from GitHub
+    response = requests.get(json_url)
+    credentials_dict = response.json()
 
     # Extracting necessary fields from the credentials
     client_email = credentials_dict['client_email']
@@ -82,20 +87,16 @@ if st.button('Analyze'):
 
             # Visualization of sentiment distribution (Bar Chart)
             st.subheader("Sentiment Distribution of Public Reactions")
-            sentiment_counts = {
-                'Positive': public_sentiments.count('positive'),
-                'Negative': public_sentiments.count('negative'),
-                'Neutral': public_sentiments.count('neutral'),
-                'Mixed': public_sentiments.count('mixed')  # Adding 'mixed' sentiment if applicable
-            }
-
-            # Create a DataFrame to display in the bar chart
-            chart_data = pd.DataFrame(list(sentiment_counts.items()), columns=['Sentiment', 'Count'])
+            chart_data = pd.DataFrame({
+                'Sentiment': ['Positive', 'Negative', 'Neutral'],
+                'Count': [public_sentiments.count('positive'), public_sentiments.count('negative'), public_sentiments.count('neutral')]
+            })
             st.bar_chart(chart_data.set_index('Sentiment'))
 
-            # Confirmation of data saved (this line should be inside the if condition)
+            # Confirmation of data saved
             st.write("Data successfully saved to Google Sheets!")
         else:
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
