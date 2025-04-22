@@ -5,7 +5,7 @@ import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Access Google credentials from Streamlit secrets
+# Access Google credentials from Streamlit secrets (TOML format)
 google_credentials = json.loads(st.secrets["google_credentials"]["json"])
 
 # Define the Google Sheets API scopes
@@ -92,3 +92,4 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
