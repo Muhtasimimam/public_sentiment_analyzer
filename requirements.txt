@@ -1,0 +1,8 @@
+
+streamlit
+pandas
+asyncpraw
+textblob
+gspread
+oauth2client
+pyngrok
