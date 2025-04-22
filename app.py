@@ -2,7 +2,8 @@ import streamlit as st
 import asyncio
 import pandas as pd
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 import json
 import requests
 
@@ -23,28 +24,17 @@ def authenticate_google_sheets():
     response = requests.get(url)
     credentials_dict = response.json()
 
-    # Extracting necessary fields from the credentials
-    client_email = credentials_dict['client_email']
-    private_key = credentials_dict['private_key']
-    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
-
-    # Define the scope of the API
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets"]
-    
-    # Authenticate using service account credentials
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-        {
-            "client_email": client_email,
-            "private_key": private_key,
-            "token_uri": "https://oauth2.googleapis.com/token"
-        },
-        scope
+    # Use google-auth to authenticate
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_dict,
+        scopes=["https://www.googleapis.com/auth/spreadsheets"],
     )
 
-    # Authorize the client
+    # Use gspread to authorize and connect to Google Sheets
     client = gspread.authorize(credentials)
 
     # Open the sheet
+    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
     sheet = client.open_by_key(spreadsheet_id).sheet1
     return sheet
 
@@ -97,5 +87,6 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
 
 
