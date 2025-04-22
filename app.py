@@ -4,6 +4,8 @@ import pandas as pd
 import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from textblob import TextBlob
+import praw
 
 # Access Google credentials from Streamlit secrets (TOML format)
 google_credentials = json.loads(st.secrets["google_credentials"]["json"])
@@ -25,9 +27,17 @@ sheet = client.open_by_url(sheet_url)
 # Access the first worksheet
 worksheet = sheet.sheet1  # Access the first sheet in the spreadsheet
 
-# Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
-from textblob import TextBlob
+# Fetch Reddit credentials from Streamlit secrets
+reddit_client_id = st.secrets["reddit"]["client_id"]
+reddit_client_secret = st.secrets["reddit"]["client_secret"]
+reddit_user_agent = st.secrets["reddit"]["user_agent"]
 
+# Set up Reddit API credentials securely
+reddit = praw.Reddit(client_id=reddit_client_id, 
+                     client_secret=reddit_client_secret, 
+                     user_agent=reddit_user_agent)
+
+# Function for sentiment analysis using TextBlob
 def analyze_sentiment(text):
     # Use TextBlob for sentiment analysis
     blob = TextBlob(text)
@@ -40,10 +50,21 @@ def analyze_sentiment(text):
     else:
         return 'neutral'
 
-
+# Function to fetch comments from Reddit based on speech keywords
 async def fetch_comments(speech_keywords):
-    return ["This is a great speech!", "I don't agree with this idea."]  # Placeholder for fetching comments
+    comments = []
+    # Searching Reddit for posts related to speech keywords
+    try:
+        for submission in reddit.subreddit('all').search(speech_keywords, limit=100):
+            submission.comments.replace_more(limit=0)  # Avoid 'MoreComments' object
+            for comment in submission.comments:
+                comments.append(comment.body)
+    except Exception as e:
+        st.error(f"Error fetching comments: {e}")
+    
+    return comments
 
+# Function to save sentiment data to Google Sheets
 def save_to_google_sheets(speech, speech_sentiment, public_sentiments):
     timestamp = pd.to_datetime('now').strftime('%Y-%m-%d %H:%M:%S')
 
@@ -80,7 +101,7 @@ if st.button('Analyze'):
             # Analyze the sentiment of the fetched public reactions
             public_sentiments = [analyze_sentiment(comment) for comment in comments]
 
-            # Save data to Google Sheets (Placeholder function)
+            # Save data to Google Sheets
             save_to_google_sheets(speech_input, speech_sentiment, public_sentiments)
 
             # Display the results
@@ -104,4 +125,3 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
-
