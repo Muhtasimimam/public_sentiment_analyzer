@@ -10,9 +10,20 @@ import requests
 # Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
 import random
 
+from textblob import TextBlob
+
 def analyze_sentiment(text):
-    sentiments = ["positive", "negative", "neutral", "mixed"]
-    return random.choice(sentiments)
+    # Create a TextBlob object and analyze sentiment
+    blob = TextBlob(text)
+    sentiment = blob.sentiment.polarity
+
+    # Return sentiment as positive, negative, or neutral based on the polarity
+    if sentiment > 0:
+        return "positive"
+    elif sentiment < 0:
+        return "negative"
+    else:
+        return "neutral"
 
 async def fetch_comments(speech_keywords):
     return ["This is a great speech!", "I don't agree with this idea."]  # Placeholder for fetching comments
