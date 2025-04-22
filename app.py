@@ -2,83 +2,67 @@ import streamlit as st
 import asyncio
 import pandas as pd
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 import json
 import requests
+from textblob import TextBlob
 
 # Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
-import random
-
 def analyze_sentiment(text):
-    sentiments = ["positive", "negative", "neutral", "mixed"]
-    return random.choice(sentiments)
+    # Create a TextBlob object and analyze sentiment
+    blob = TextBlob(text)
+    sentiment = blob.sentiment.polarity
+
+    # Return sentiment as positive, negative, or neutral based on the polarity
+    if sentiment > 0:
+        return "positive"
+    elif sentiment < 0:
+        return "negative"
+    else:
+        return "neutral"
 
 async def fetch_comments(speech_keywords):
     return ["This is a great speech!", "I don't agree with this idea."]  # Placeholder for fetching comments
 
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
-    # URL to the raw GitHub JSON file
-    json_url = "https://raw.githubusercontent.com/Muhtasimimam/public_sentiment_analyzer/master/sentimentanalysisapp-457520-74eff8b32d78.json"
-
-    # Fetch the JSON file from GitHub
-    response = requests.get(json_url)
+    url = "https://raw.githubusercontent.com/Muhtasimimam/public_sentiment_analyzer/master/sentimentanalysisapp-457520-74eff8b32d78.json"
+    response = requests.get(url)
     credentials_dict = response.json()
 
-    # Extracting necessary fields from the credentials
-    client_email = credentials_dict['client_email']
-    private_key = credentials_dict['private_key']
-    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
-
-    # Define the scope of the API
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets"]
-    
-    # Authenticate using service account credentials
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-        {
-            "client_email": client_email,
-            "private_key": private_key,
-            "token_uri": "https://oauth2.googleapis.com/token"
-        },
-        scope
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_dict,
+        scopes=["https://www.googleapis.com/auth/spreadsheets"],
     )
 
-    # Authorize the client
     client = gspread.authorize(credentials)
 
-    # Open the sheet
+    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
     sheet = client.open_by_key(spreadsheet_id).sheet1
     return sheet
 
 # Function to save data to Google Sheets
 def save_to_google_sheets(speech, speech_sentiment, public_sentiments):
     sheet = authenticate_google_sheets()  # Authenticate and get the sheet
-    # Append data to the sheet (you can modify this to insert data as needed)
     sheet.append_row([speech, speech_sentiment, ', '.join(public_sentiments)])
 
 # Streamlit UI for user input
 st.title("Real-Time Sentiment Analysis and Visualization")
 
-# Get speech input from the user
 speech_input = st.text_area("Enter Speech:", "Type the speech here...")
 
-# Button to analyze and show results
 if st.button('Analyze'):
     if speech_input:
-        # Analyze the speech sentiment
         speech_sentiment = analyze_sentiment(speech_input)
-        
-        # Fetch public comments from Reddit based on the speech (automatically fetches reactions)
+
         comments = asyncio.run(fetch_comments(speech_input))
-        
+
         if comments:
-            # Analyze the sentiment of the fetched public reactions
             public_sentiments = [analyze_sentiment(comment) for comment in comments]
 
-            # Save data to Google Sheets (Now using the updated function)
             save_to_google_sheets(speech_input, speech_sentiment, public_sentiments)
 
-            # Display the results
             st.subheader("Speech Sentiment:")
             st.write(speech_sentiment)
 
@@ -87,16 +71,24 @@ if st.button('Analyze'):
 
             # Visualization of sentiment distribution (Bar Chart)
             st.subheader("Sentiment Distribution of Public Reactions")
-            chart_data = pd.DataFrame({
-                'Sentiment': ['Positive', 'Negative', 'Neutral'],
-                'Count': [public_sentiments.count('positive'), public_sentiments.count('negative'), public_sentiments.count('neutral')]
-            })
+
+            # Calculate the sentiment distribution
+            sentiment_counts = {
+                'positive': public_sentiments.count('positive'),
+                'negative': public_sentiments.count('negative'),
+                'neutral': public_sentiments.count('neutral')
+            }
+
+            # Convert to DataFrame for plotting
+            chart_data = pd.DataFrame(list(sentiment_counts.items()), columns=['Sentiment', 'Count'])
+
+            # Display the bar chart
             st.bar_chart(chart_data.set_index('Sentiment'))
 
-            # Confirmation of data saved
             st.write("Data successfully saved to Google Sheets!")
         else:
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
 
