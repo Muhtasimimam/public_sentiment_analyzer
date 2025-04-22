@@ -85,12 +85,19 @@ if st.button('Analyze'):
             st.write(public_sentiments)
 
             # Visualization of sentiment distribution (Bar Chart)
-            st.subheader("Sentiment Distribution of Public Reactions")
-            chart_data = pd.DataFrame({
-                'Sentiment': ['Positive', 'Negative', 'Neutral'],
-                'Count': [public_sentiments.count('positive'), public_sentiments.count('negative'), public_sentiments.count('neutral')]
-            })
-            st.bar_chart(chart_data.set_index('Sentiment'))
+st.subheader("Sentiment Distribution of Public Reactions")
+# Count the occurrences of each sentiment
+sentiment_counts = {
+    'Positive': public_sentiments.count('positive'),
+    'Negative': public_sentiments.count('negative'),
+    'Neutral': public_sentiments.count('neutral'),
+    'Mixed': public_sentiments.count('mixed')  # Adding 'mixed' sentiment if applicable
+}
+
+# Create a DataFrame to display in the bar chart
+chart_data = pd.DataFrame(list(sentiment_counts.items()), columns=['Sentiment', 'Count'])
+st.bar_chart(chart_data.set_index('Sentiment'))
+
 
             # Confirmation of data saved
             st.write("Data successfully saved to Google Sheets!")
