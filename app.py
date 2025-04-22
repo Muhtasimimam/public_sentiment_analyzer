@@ -4,6 +4,7 @@ import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import json
+import requests
 
 # Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
 import random
@@ -18,8 +19,9 @@ async def fetch_comments(speech_keywords):
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
     # Load credentials from the JSON file in your GitHub repository
-    with open('google_credentials.json', 'r') as file:
-        credentials_dict = json.load(file)
+    url = "https://raw.githubusercontent.com/Muhtasimimam/public_sentiment_analyzer/master/sentimentanalysisapp-457520-74eff8b32d78.json"
+    response = requests.get(url)
+    credentials_dict = response.json()
 
     # Extracting necessary fields from the credentials
     client_email = credentials_dict['client_email']
@@ -95,4 +97,5 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
 
