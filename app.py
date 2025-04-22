@@ -3,9 +3,11 @@ import asyncio
 import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import random
+import json
 
 # Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
+import random
+
 def analyze_sentiment(text):
     sentiments = ["positive", "negative", "neutral", "mixed"]
     return random.choice(sentiments)
@@ -15,10 +17,14 @@ async def fetch_comments(speech_keywords):
 
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
-    # Load the credentials from secrets
-    client_email = st.secrets["google_sheets"]["client_email"]
-    private_key = st.secrets["google_sheets"]["private_key"]
-    spreadsheet_id = st.secrets["google_sheets"]["spreadsheet_id"]
+    # Load credentials from the JSON file in your GitHub repository
+    with open('google_credentials.json', 'r') as file:
+        credentials_dict = json.load(file)
+
+    # Extracting necessary fields from the credentials
+    client_email = credentials_dict['client_email']
+    private_key = credentials_dict['private_key']
+    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
 
     # Define the scope of the API
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets"]
@@ -89,3 +95,4 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
