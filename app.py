@@ -26,8 +26,20 @@ sheet = client.open_by_url(sheet_url)
 worksheet = sheet.sheet1  # Access the first sheet in the spreadsheet
 
 # Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
+from textblob import TextBlob
+
 def analyze_sentiment(text):
-    return "positive"  # Placeholder for sentiment analysis
+    # Use TextBlob for sentiment analysis
+    blob = TextBlob(text)
+    sentiment = blob.sentiment.polarity  # Returns value between -1 (negative) and 1 (positive)
+
+    if sentiment > 0:
+        return 'positive'
+    elif sentiment < 0:
+        return 'negative'
+    else:
+        return 'neutral'
+
 
 async def fetch_comments(speech_keywords):
     return ["This is a great speech!", "I don't agree with this idea."]  # Placeholder for fetching comments
