@@ -2,28 +2,14 @@ import streamlit as st
 import asyncio
 import pandas as pd
 import gspread
-from google.auth.transport.requests import Request
-from google.oauth2 import service_account
+from oauth2client.service_account import ServiceAccountCredentials
 import json
-import requests
-
-# Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
 import random
 
-from textblob import TextBlob
-
+# Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
 def analyze_sentiment(text):
-    # Create a TextBlob object and analyze sentiment
-    blob = TextBlob(text)
-    sentiment = blob.sentiment.polarity
-
-    # Return sentiment as positive, negative, or neutral based on the polarity
-    if sentiment > 0:
-        return "positive"
-    elif sentiment < 0:
-        return "negative"
-    else:
-        return "neutral"
+    sentiments = ["positive", "negative", "neutral", "mixed"]
+    return random.choice(sentiments)
 
 async def fetch_comments(speech_keywords):
     return ["This is a great speech!", "I don't agree with this idea."]  # Placeholder for fetching comments
@@ -31,21 +17,31 @@ async def fetch_comments(speech_keywords):
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
     # Load credentials from the JSON file in your GitHub repository
-    url = "https://raw.githubusercontent.com/Muhtasimimam/public_sentiment_analyzer/master/sentimentanalysisapp-457520-74eff8b32d78.json"
-    response = requests.get(url)
-    credentials_dict = response.json()
+    with open('google_credentials.json', 'r') as file:
+        credentials_dict = json.load(file)
 
-    # Use google-auth to authenticate
-    credentials = service_account.Credentials.from_service_account_info(
-        credentials_dict,
-        scopes=["https://www.googleapis.com/auth/spreadsheets"],
+    # Extracting necessary fields from the credentials
+    client_email = credentials_dict['client_email']
+    private_key = credentials_dict['private_key']
+    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
+
+    # Define the scope of the API
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets"]
+    
+    # Authenticate using service account credentials
+    credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+        {
+            "client_email": client_email,
+            "private_key": private_key,
+            "token_uri": "https://oauth2.googleapis.com/token"
+        },
+        scope
     )
 
-    # Use gspread to authorize and connect to Google Sheets
+    # Authorize the client
     client = gspread.authorize(credentials)
 
     # Open the sheet
-    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
     sheet = client.open_by_key(spreadsheet_id).sheet1
     return sheet
 
@@ -85,26 +81,21 @@ if st.button('Analyze'):
             st.write(public_sentiments)
 
             # Visualization of sentiment distribution (Bar Chart)
-st.subheader("Sentiment Distribution of Public Reactions")
-# Count the occurrences of each sentiment
-sentiment_counts = {
-    'Positive': public_sentiments.count('positive'),
-    'Negative': public_sentiments.count('negative'),
-    'Neutral': public_sentiments.count('neutral'),
-    'Mixed': public_sentiments.count('mixed')  # Adding 'mixed' sentiment if applicable
-}
+            st.subheader("Sentiment Distribution of Public Reactions")
+            sentiment_counts = {
+                'Positive': public_sentiments.count('positive'),
+                'Negative': public_sentiments.count('negative'),
+                'Neutral': public_sentiments.count('neutral'),
+                'Mixed': public_sentiments.count('mixed')  # Adding 'mixed' sentiment if applicable
+            }
 
-# Create a DataFrame to display in the bar chart
-chart_data = pd.DataFrame(list(sentiment_counts.items()), columns=['Sentiment', 'Count'])
-st.bar_chart(chart_data.set_index('Sentiment'))
+            # Create a DataFrame to display in the bar chart
+            chart_data = pd.DataFrame(list(sentiment_counts.items()), columns=['Sentiment', 'Count'])
+            st.bar_chart(chart_data.set_index('Sentiment'))
 
-
-            # Confirmation of data saved
+            # Confirmation of data saved (this line should be inside the if condition)
             st.write("Data successfully saved to Google Sheets!")
         else:
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
-
-
-
