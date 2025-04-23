@@ -71,7 +71,7 @@ def save_to_google_sheets(speech, speech_sentiment, public_sentiments):
     sheet.append_row([speech, speech_sentiment, ', '.join(public_sentiments)])
 
 # Streamlit UI for user input
-st.title("Real-Time Sentiment Analysis and Visualization")
+st.title("Public Sentiment Analyzer")
 
 speech_input = st.text_area("Enter Speech:", "Type the speech here...")
 
