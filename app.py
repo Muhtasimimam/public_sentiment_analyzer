@@ -6,17 +6,18 @@ from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 import json
 import requests
-from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import praw
 
-# Dummy function for sentiment analysis
+# Dummy function for sentiment analysis using VADER
 def analyze_sentiment(text):
-    blob = TextBlob(text)
-    sentiment = blob.sentiment.polarity
+    analyzer = SentimentIntensityAnalyzer()
+    sentiment_score = analyzer.polarity_scores(text)['compound']
 
-    if sentiment > 0:
+    # Classifying based on VADER's sentiment score
+    if sentiment_score >= 0.05:
         return "positive"
-    elif sentiment < 0:
+    elif sentiment_score <= -0.05:
         return "negative"
     else:
         return "neutral"
@@ -25,18 +26,19 @@ def analyze_sentiment(text):
 def initialize_reddit():
     reddit = praw.Reddit(
         client_id="1RaMfs_A_fvRgbUoucCBcA",  # Replace with your Reddit client_id
-        client_secret="nou-mUwL8_qalRm5fghACv-AiLl5Uw",  # Corrected syntax here
+        client_secret="nou-mUwL8_qalRm5fghACv-AiLl5Uw",  # Replace with your Reddit client_secret
         user_agent="PublicSentimentAnalyzer"  # Replace with your Reddit user_agent
     )
     return reddit
 
+# Function to fetch comments based on speech keywords
 async def fetch_comments(speech_keywords):
     reddit = initialize_reddit()
     subreddit = reddit.subreddit('all')  # You can replace 'all' with any specific subreddit
     comments = []
 
     # Search for posts based on the speech keywords
-    for submission in subreddit.search(speech_keywords, limit=10):  # Increased the limit to 10
+    for submission in subreddit.search(speech_keywords, limit=10):  # Increased the limit
         submission.comments.replace_more(limit=0)  # Avoid loading 'More Comments'
         for comment in submission.comments.list():
             comments.append(comment.body)  # Collect comment bodies
@@ -108,5 +110,6 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
 
 
