@@ -7,14 +7,13 @@ from google.oauth2 import service_account
 import json
 import requests
 from textblob import TextBlob
+import praw
 
-# Dummy functions for sentiment analysis and fetching comments (replace these with actual code)
+# Dummy function for sentiment analysis
 def analyze_sentiment(text):
-    # Create a TextBlob object and analyze sentiment
     blob = TextBlob(text)
     sentiment = blob.sentiment.polarity
 
-    # Return sentiment as positive, negative, or neutral based on the polarity
     if sentiment > 0:
         return "positive"
     elif sentiment < 0:
@@ -22,8 +21,27 @@ def analyze_sentiment(text):
     else:
         return "neutral"
 
+# Initialize PRAW for Reddit with provided credentials
+def initialize_reddit():
+    reddit = praw.Reddit(
+        client_id="1RaMfs_A_fvRgbUoucCBcA",  # Replace with your Reddit client_id
+        client_secret="nou-mUwL8_qalRm5fghACv-AiLl5Uw",  # Replace with your Reddit client_secret
+        user_agent="PublicSentimentAnalyzer"  # Replace with your Reddit user_agent
+    )
+    return reddit
+
 async def fetch_comments(speech_keywords):
-    return ["This is a great speech!", "I don't agree with this idea."]  # Placeholder for fetching comments
+    reddit = initialize_reddit()
+    subreddit = reddit.subreddit('all')  # You can replace 'all' with any specific subreddit
+    comments = []
+
+    # Search for posts based on the speech keywords
+    for submission in subreddit.search(speech_keywords, limit=5):  # Limit the number of results
+        submission.comments.replace_more(limit=0)  # Avoid loading 'More Comments'
+        for comment in submission.comments.list():
+            comments.append(comment.body)  # Collect comment bodies
+
+    return comments
 
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
@@ -61,6 +79,7 @@ if st.button('Analyze'):
         if comments:
             public_sentiments = [analyze_sentiment(comment) for comment in comments]
 
+            # Save to Google Sheets
             save_to_google_sheets(speech_input, speech_sentiment, public_sentiments)
 
             st.subheader("Speech Sentiment:")
@@ -69,17 +88,16 @@ if st.button('Analyze'):
             st.subheader("Public Reactions Sentiment:")
             st.write(public_sentiments)
 
-            # Visualization of sentiment distribution (Bar Chart)
             st.subheader("Sentiment Distribution of Public Reactions")
 
-            # Calculate the sentiment distribution
+            # Count the occurrences of each sentiment in public sentiments
             sentiment_counts = {
                 'positive': public_sentiments.count('positive'),
                 'negative': public_sentiments.count('negative'),
                 'neutral': public_sentiments.count('neutral')
             }
 
-            # Convert to DataFrame for plotting
+            # Convert the sentiment_counts to a DataFrame
             chart_data = pd.DataFrame(list(sentiment_counts.items()), columns=['Sentiment', 'Count'])
 
             # Display the bar chart
@@ -90,5 +108,3 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
-
-
