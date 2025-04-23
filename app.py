@@ -14,13 +14,14 @@ def analyze_sentiment(text):
     analyzer = SentimentIntensityAnalyzer()
     sentiment_score = analyzer.polarity_scores(text)['compound']
 
-    # Classifying based on VADER's sentiment score
-    if sentiment_score >= 0.05:
+    # Adjust thresholds for more accurate classification
+    if sentiment_score >= 0.1:  # Positive threshold
         return "positive"
-    elif sentiment_score <= -0.05:
+    elif sentiment_score <= -0.5:  # Stronger negative threshold
         return "negative"
     else:
         return "neutral"
+
 
 # Initialize PRAW for Reddit with provided credentials
 def initialize_reddit():
