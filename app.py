@@ -25,7 +25,7 @@ def analyze_sentiment(text):
 def initialize_reddit():
     reddit = praw.Reddit(
         client_id="1RaMfs_A_fvRgbUoucCBcA",  # Replace with your Reddit client_id
-        client_secret=""nou-mUwL8_qalRm5fghACv-AiLl5Uw",  # Replace with your Reddit client_secret
+        client_secret="nou-mUwL8_qalRm5fghACv-AiLl5Uw",  # Corrected syntax here
         user_agent="PublicSentimentAnalyzer"  # Replace with your Reddit user_agent
     )
     return reddit
@@ -108,4 +108,5 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
+
 
