@@ -42,8 +42,12 @@ async def fetch_comments(speech_keywords):
         submission.comments.replace_more(limit=0)  # Avoid loading 'More Comments'
         for comment in submission.comments.list():
             comments.append(comment.body)  # Collect comment bodies
-
+    
+    # Log fetched comments to check
+    print(f"Fetched {len(comments)} comments for the speech: {speech_keywords}")
+    
     return comments
+
 
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
