@@ -9,7 +9,7 @@ import requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import praw
 
-# Dummy function for sentiment analysis using VADER
+# Sentiment analysis using VADER
 def analyze_sentiment(text):
     analyzer = SentimentIntensityAnalyzer()
     sentiment_score = analyzer.polarity_scores(text)['compound']
@@ -71,6 +71,7 @@ def save_to_google_sheets(speech, speech_sentiment, public_sentiments):
     sheet.append_row([speech, speech_sentiment, ', '.join(public_sentiments)])
 
 # Streamlit UI for user input
+st.set_page_config(page_title="Public Sentiment Analyzer", layout="wide")  # Corrected title for the app
 st.title("Public Sentiment Analyzer")
 
 speech_input = st.text_area("Enter Speech:", "Type the speech here...")
