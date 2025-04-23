@@ -6,5 +6,11 @@ gspread
 oauth2client
 pyngrok
 praw==7.7.0
+vaderSentiment
+requests
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+
 
 
