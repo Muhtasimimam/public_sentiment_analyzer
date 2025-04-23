@@ -14,14 +14,16 @@ def analyze_sentiment(text):
     analyzer = SentimentIntensityAnalyzer()
     sentiment_score = analyzer.polarity_scores(text)['compound']
 
+    # Log the sentiment score for debugging
+    st.write(f"Sentiment Score: {sentiment_score} for text: '{text}'")
+
     # Adjust thresholds for more accurate classification
     if sentiment_score >= 0.1:  # Positive threshold
         return "positive"
-    elif sentiment_score <= -0.5:  # Stronger negative threshold
+    elif sentiment_score <= -0.7:  # Stronger negative threshold
         return "negative"
     else:
         return "neutral"
-
 
 # Initialize PRAW for Reddit with provided credentials
 def initialize_reddit():
@@ -43,12 +45,8 @@ async def fetch_comments(speech_keywords):
         submission.comments.replace_more(limit=0)  # Avoid loading 'More Comments'
         for comment in submission.comments.list():
             comments.append(comment.body)  # Collect comment bodies
-    
-    # Log fetched comments to check
-    print(f"Fetched {len(comments)} comments for the speech: {speech_keywords}")
-    
-    return comments
 
+    return comments
 
 # Function to authenticate and connect to Google Sheets
 def authenticate_google_sheets():
@@ -104,6 +102,9 @@ if st.button('Analyze'):
                 'neutral': public_sentiments.count('neutral')
             }
 
+            # Ensure the counts are correct
+            st.write(f"Sentiment Counts: {sentiment_counts}")
+
             # Convert the sentiment_counts to a DataFrame
             chart_data = pd.DataFrame(list(sentiment_counts.items()), columns=['Sentiment', 'Count'])
 
@@ -115,7 +116,3 @@ if st.button('Analyze'):
             st.error("No public comments found for the given speech.")
     else:
         st.error("Please enter a speech.")
-
-
-
-
