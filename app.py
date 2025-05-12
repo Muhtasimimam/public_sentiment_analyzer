@@ -28,23 +28,23 @@ def analyze_sentiment(text):
 # Initialize PRAW for Reddit with provided credentials
 def initialize_reddit():
     reddit = praw.Reddit(
-        client_id="1RaMfs_A_fvRgbUoucCBcA",  # Replace with your Reddit client_id
-        client_secret="nou-mUwL8_qalRm5fghACv-AiLl5Uw",  # Replace with your Reddit client_secret
-        user_agent="PublicSentimentAnalyzer"  # Replace with your Reddit user_agent
+        client_id="1RaMfs_A_fvRgbUoucCBcA",
+        client_secret="nou-mUwL8_qalRm5fghACv-AiLl5Uw",  
+        user_agent="PublicSentimentAnalyzer" 
     )
     return reddit
 
 # Function to fetch comments based on speech keywords
 async def fetch_comments(speech_keywords):
     reddit = initialize_reddit()
-    subreddit = reddit.subreddit('all')  # You can replace 'all' with any specific subreddit
+    subreddit = reddit.subreddit('all')  
     comments = []
 
     # Search for posts based on the speech keywords
-    for submission in subreddit.search(speech_keywords, limit=10):  # Increased the limit
-        submission.comments.replace_more(limit=0)  # Avoid loading 'More Comments'
+    for submission in subreddit.search(speech_keywords, limit=10): 
+        submission.comments.replace_more(limit=0) 
         for comment in submission.comments.list():
-            comments.append(comment.body)  # Collect comment bodies
+            comments.append(comment.body) 
 
     return comments
 
@@ -61,17 +61,17 @@ def authenticate_google_sheets():
 
     client = gspread.authorize(credentials)
 
-    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc"  # Replace with your actual sheet ID
+    spreadsheet_id = "13Uwvi9FVy1Cv-NLYdwauvb1DjaSOTRZVCBz1OxyBupc" 
     sheet = client.open_by_key(spreadsheet_id).sheet1
     return sheet
 
 # Function to save data to Google Sheets
 def save_to_google_sheets(speech, speech_sentiment, public_sentiments):
-    sheet = authenticate_google_sheets()  # Authenticate and get the sheet
+    sheet = authenticate_google_sheets()  
     sheet.append_row([speech, speech_sentiment, ', '.join(public_sentiments)])
 
 # Streamlit UI for user input
-st.set_page_config(page_title="Public Sentiment Analyzer", layout="wide")  # Corrected title for the app
+st.set_page_config(page_title="Public Sentiment Analyzer", layout="wide")  
 st.title("Public Sentiment Analyzer")
 
 speech_input = st.text_area("Enter Speech:", "Type the speech here...")
